@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Purchase Tickets{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-shopping-cart"></i> Purchase Tickets</h4>
+            </div>
+            <div class="card-body">
+                <!-- Event Summary -->
+                <div class="alert alert-info">
+                    <h5>{{ event.title }}</h5>
+                    <p class="mb-0">
+                        <i class="fas fa-calendar"></i> {{ event.start_date|date:"M d, Y - h:i A" }}<br>
+                        <i class="fas fa-map-marker"></i> {{ event.venue }}<br>
+                        <strong>Price: {% if event.is_free %}FREE{% else %}KES {{ event.price }}{% endif %}</strong>
+                    </p>
+                </div>
+                
+                <form method="post" id="purchaseForm">
+                    {% csrf_token %}
+                    
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label class="form-label">Number of Tickets</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                               value="1" min="1" max="{{ max_tickets }}" required>
+                        <small class="text-muted">Maximum {{ max_tickets }} tickets available</small>
+                    </div>
+                    
+                    <!-- Price Summary -->
+                    <div class="card mb-4 bg-light">
+                        <div class="card-body">
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                    <td>Price per ticket:</td>
+                                    <td class="text-end">KES <span id="pricePerTicket">{{ event.price }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Quantity:</td>
+                                    <td class="text-end"><span id="quantityDisplay">1</span></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td>Total:</td>
+                                    <td class="text-end text-success">KES <span id="totalAmount">{{ event.price }}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Phone Number -->
+                    <div class="mb-4">
+                        <label class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control" 
+                               placeholder="0712345678" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="fas fa-lock"></i> Confirm Purchase
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('quantity').addEventListener('input', function(e) {
+    let quantity = parseInt(e.target.value) || 1;
+    let price = parseFloat('{{ event.price }}');
+    let total = quantity * price;
+    
+    document.getElementById('quantityDisplay').textContent = quantity;
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+});
+</script>
+{% endblock %}

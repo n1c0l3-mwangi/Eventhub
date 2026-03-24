@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Organizer Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Organizer Dashboard</h2>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5>Total Events</h5>
+                <h2>{{ total_events }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5>Tickets Sold</h5>
+                <h2>{{ total_tickets_sold }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Revenue</h5>
+                <h2>KES {{ total_revenue }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="mb-4">
+    <a href="{% url 'events:create_event' %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> Create New Event
+    </a>
+</div>
+
+<!-- My Events -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">My Events</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Date</th>
+                        <th>Tickets Sold</th>
+                        <th>Revenue</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.title }}</td>
+                        <td>{{ event.start_date|date:"M d, Y" }}</td>
+                        <td>{{ event.tickets_sold }}/{{ event.total_capacity }}</td>
+                        <td>KES {% widthratio event.tickets_sold 1 event.price %}</td>
+                        <td>
+                            <span class="badge {% if event.status == 'approved' %}bg-success{% elif event.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ event.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'events:event_detail' event.id %}" class="btn btn-sm btn-info">
+                                View
+                            </a>
+                            <a href="{% url 'events:edit_event' event.id %}" class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No events created yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Ticket Sales</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Event</th>
+                        <th>Buyer</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in recent_tickets %}
+                    <tr>
+                        <td>{{ ticket.ticket_id }}</td>
+                        <td>{{ ticket.event.title }}</td>
+                        <td>{{ ticket.user.username }}</td>
+                        <td>{{ ticket.quantity }}</td>
+                        <td>KES {{ ticket.total_amount }}</td>
+                        <td>{{ ticket.purchased_at|date:"M d, H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No sales yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

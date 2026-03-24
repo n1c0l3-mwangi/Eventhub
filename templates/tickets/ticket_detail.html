@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket - {{ ticket.ticket_id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-ticket-alt"></i> Your Digital Ticket</h4>
+            </div>
+            <div class="card-body text-center">
+                <h3>{{ ticket.event.title }}</h3>
+                <p class="text-muted">
+                    <i class="fas fa-calendar"></i> {{ ticket.event.start_date|date:"F d, Y - h:i A" }}<br>
+                    <i class="fas fa-map-marker"></i> {{ ticket.event.venue }}, {{ ticket.event.city }}
+                </p>
+                
+                {% if ticket.qr_code %}
+                <div class="my-4">
+                    <img src="{{ ticket.qr_code.url }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                </div>
+                {% endif %}
+                
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Ticket ID:</strong> {{ ticket.ticket_id }}</p>
+                        <p class="mb-1"><strong>Attendee:</strong> {{ ticket.user.get_full_name|default:ticket.user.username }}</p>
+                        <p class="mb-0"><strong>Status:</strong> 
+                            <span class="badge {% if ticket.status == 'active' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Ticket
+                    </button>
+                    <a href="{% url 'tickets:my_tickets' %}" class="btn btn-secondary">
+                        Back to My Tickets
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

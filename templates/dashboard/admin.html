@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-cogs"></i> Admin Dashboard</h2>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Users</h6>
+                <h3>{{ total_users }}</h3>
+                <small>Organizers: {{ total_organizers }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>Total Events</h6>
+                <h3>{{ total_events }}</h3>
+                <small>Pending: {{ pending_events }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h6>Total Tickets</h6>
+                <h3>{{ total_tickets }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6>Total Revenue</h6>
+                <h3>KES {{ total_revenue }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+<div class="card mb-4">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0">Events Pending Approval</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Organizer</th>
+                        <th>Date</th>
+                        <th>Venue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in pending_approval %}
+                    <tr>
+                        <td>{{ event.title }}</td>
+                        <td>{{ event.organizer.username }}</td>
+                        <td>{{ event.start_date|date:"M d, Y" }}</td>
+                        <td>{{ event.venue }}</td>
+                        <td>
+                            <a href="{% url 'events:event_detail' event.id %}" class="btn btn-sm btn-info">View</a>
+                            <a href="{% url 'dashboard:approve_event' event.id %}" class="btn btn-sm btn-success">Approve</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No pending events</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Users</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>User Type</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.get_user_type_display }}</td>
+                        <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No users yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">System Overview</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tr>
+                <th>Total Users</th>
+                <td>{{ total_users }}</td>
+                <th>Event Goers</th>
+                <td>{{ total_event_goers }}</td>
+            </tr>
+            <tr>
+                <th>Total Organizers</th>
+                <td>{{ total_organizers }}</td>
+                <th>Total Events</th>
+                <td>{{ total_events }}</td>
+            </tr>
+            <tr>
+                <th>Approved Events</th>
+                <td>{{ approved_events }}</td>
+                <th>Pending Events</th>
+                <td>{{ pending_events }}</td>
+            </tr>
+            <tr>
+                <th>Total Tickets</th>
+                <td>{{ total_tickets }}</td>
+                <th>Total Revenue</th>
+                <td>KES {{ total_revenue }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

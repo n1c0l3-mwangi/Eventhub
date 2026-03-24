@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Payment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-lock"></i> Secure Payment</h4>
+            </div>
+            <div class="card-body">
+                <!-- Order Summary -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h5>Order Summary</h5>
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td>Event:</td>
+                                <td class="text-end"><strong>{{ booking.event.title }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Tickets:</td>
+                                <td class="text-end">{{ booking.quantity }}</td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td>Total Amount:</td>
+                                <td class="text-end text-primary">KES {{ booking.total_amount }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Payment Form -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">M-Pesa Phone Number</label>
+                        <input type="tel" name="phone_number" class="form-control form-control-lg" 
+                               placeholder="0712345678" required>
+                        <div class="form-text">
+                            You will receive an STK push on this number
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="fas fa-mobile-alt"></i> Pay KES {{ booking.total_amount }}
+                    </button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'events:event_detail' booking.event.id %}" class="text-muted">
+                        ← Cancel and return
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Processing Modal -->
+        <div class="modal fade" id="processingModal" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center p-4">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                        <h5>Processing Payment</h5>
+                        <p class="text-muted">Please check your phone and enter M-Pesa PIN</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    var modal = new bootstrap.Modal(document.getElementById('processingModal'));
+    modal.show();
+});
+</script>
+{% endblock %}

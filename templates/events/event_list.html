@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Events - Eventhub{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-calendar-alt"></i> Browse Events</h2>
+
+<div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-md-3 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Events</h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-search"></i> Search</label>
+                        <input type="text" name="q" class="form-control" value="{{ request.GET.q|default:'' }}" 
+                               placeholder="Event name or location...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-tag"></i> Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    
+                    {% if request.GET.q or request.GET.category %}
+                    <a href="{% url 'events:event_list' %}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Events Grid -->
+    <div class="col-md-9">
+        {% if search_query %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Showing results for: "{{ search_query }}"
+        </div>
+        {% endif %}
+        
+        <div class="row">
+            {% for event in events %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 event-card">
+                    <!-- Event Image - FIXED SECTION -->
+                    <div class="event-image-container" style="height: 180px; overflow: hidden; position: relative; background-color: #f8f9fa;">
+                        {% if event.featured_image %}
+                            <img src="{{ event.featured_image.url }}" 
+                                 class="card-img-top" 
+                                 alt="{{ event.title }}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                 onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<div style=\"height:100%; background:linear-gradient(135deg,#667eea,#764ba2); display:flex; align-items:center; justify-content:center;\"><i class=\"fas fa-image fa-3x text-white\"></i></div>'">
+                        {% else %}
+                            <div style="height: 100%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-image fa-3x text-white opacity-50"></i>
+                                <span class="text-white ms-2">No Image</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Price Badge -->
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge {% if event.is_free %}bg-success{% else %}bg-primary{% endif %} p-2">
+                                {% if event.is_free %}
+                                    <i class="fas fa-gift"></i> FREE
+                                {% else %}
+                                    KES {{ event.price }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <!-- Date Badge -->
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                            <span class="badge bg-dark bg-opacity-75 p-2">
+                                <i class="far fa-calendar-alt"></i> {{ event.start_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">{{ event.title }}</h5>
+                        
+                        <!-- Location -->
+                        <p class="card-text text-muted small mb-2">
+                            <i class="fas fa-map-marker-alt text-danger"></i> 
+                            {{ event.venue|truncatechars:30 }}
+                        </p>
+                        
+                        <!-- Category & Tickets -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary">{{ event.category.name|default:"Uncategorized" }}</span>
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ event.available_tickets }} left
+                            </small>
+                        </div>
+                        
+                        <!-- Description Preview -->
+                        <p class="card-text small text-muted">
+                            {{ event.description|truncatechars:60 }}
+                        </p>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress mb-3" style="height: 5px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {% widthratio event.tickets_sold event.total_capacity 100 %}%">
+                            </div>
+                        </div>
+                        
+                        <!-- View Button -->
+                        <a href="{% url 'events:event_detail' event.id %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                        <h4>No Events Found</h4>
+                        <p class="text-muted">Try adjusting your filters or search criteria.</p>
+                        <a href="{% url 'events:event_list' %}" class="btn btn-primary">
+                            <i class="fas fa-redo"></i> Reset Filters
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.event-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.event-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+.event-image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.event-image-container img {
+    transition: transform 0.5s ease;
+}
+
+.event-card:hover .event-image-container img {
+    transform: scale(1.1);
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}

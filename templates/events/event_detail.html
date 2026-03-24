@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} - Eventhub{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Event Details -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <!-- Event Image -->
+            {% if event.featured_image %}
+            <img src="{{ event.featured_image.url }}" class="card-img-top" alt="{{ event.title }}" style="max-height: 400px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light text-center p-5">
+                <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                <p class="text-muted">No image available for this event</p>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <h2 class="card-title">{{ event.title }}</h2>
+                <p class="text-muted">
+                    <i class="fas fa-user"></i> Organized by {{ event.organizer.username }}
+                </p>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h5><i class="fas fa-calendar text-primary"></i> Date & Time</h5>
+                    <p>
+                        <strong>Start:</strong> {{ event.start_date|date:"F d, Y - h:i A" }}<br>
+                        <strong>End:</strong> {{ event.end_date|date:"F d, Y - h:i A" }}
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <h5><i class="fas fa-map-marker text-danger"></i> Location</h5>
+                    <p>
+                        <strong>{{ event.venue }}</strong><br>
+                        {{ event.address }}<br>
+                        {{ event.city }}
+                    </p>
+                    <a href="https://maps.google.com/?q={{ event.venue }},{{ event.city }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-map-marked-alt"></i> View on Google Maps
+                    </a>
+                </div>
+                
+                <hr>
+                
+                <h5>About This Event</h5>
+                <p>{{ event.description|linebreaks }}</p>
+                
+                <div class="mt-3">
+                    <span class="badge bg-secondary">{{ event.category.name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ticket Info & Purchase -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Ticket Information</h5>
+                
+                <div class="mb-3">
+                    <strong>Price:</strong><br>
+                    {% if event.is_free %}
+                        <span class="badge bg-success fs-6">FREE ENTRY</span>
+                    {% else %}
+                        <h3 class="text-primary">KES {{ event.price }}</h3>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Availability:</strong><br>
+                    <div class="progress mb-2" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {% widthratio event.tickets_sold event.total_capacity 100 %}%">
+                        </div>
+                    </div>
+                    <p>{{ event.available_tickets }} out of {{ event.total_capacity }} tickets available</p>
+                </div>
+                
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'event_goer' %}
+                        <a href="{% url 'tickets:purchase' event.id %}" class="btn btn-success w-100 btn-lg">
+                            <i class="fas fa-shopping-cart"></i> Get Tickets
+                        </a>
+                        <a href="{% url 'tickets:my_tickets' %}" class="btn btn-outline-primary w-100 mt-2">
+                            <i class="fas fa-ticket-alt"></i> View My Tickets
+                        </a>
+                    {% endif %}
+                    
+                    {% if user == event.organizer %}
+                        <div class="d-grid gap-2 mt-2">
+                            <a href="{% url 'events:edit_event' event.id %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Edit Event
+                            </a>
+                            <a href="{% url 'dashboard:event_analytics' event.id %}" class="btn btn-info">
+                                <i class="fas fa-chart-bar"></i> View Analytics
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user.is_superuser or user.user_type == 'admin' %}
+                        <div class="mt-3">
+                            <span class="badge bg-warning">Admin View</span>
+                            {% if event.status == 'pending' %}
+                            <div class="d-grid gap-2 mt-2">
+                                <a href="{% url 'dashboard:approve_event' event.id %}" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Approve Event
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Please <a href="{% url 'login' %}?next={{ request.path }}">login</a> to purchase tickets
+                    </div>
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt"></i> Login to Purchase
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Event Status Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6>Event Status</h6>
+                <span class="badge {% if event.status == 'approved' %}bg-success{% elif event.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %} fs-6">
+                    {{ event.get_status_display }}
+                </span>
+                
+                <hr>
+                
+                <h6>Share This Event</h6>
+                <div class="d-flex gap-2">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?text={{ event.title }}&url={{ request.build_absolute_uri }}" target="_blank" class="btn btn-outline-info btn-sm">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://wa.me/?text={{ event.title }} - {{ request.build_absolute_uri }}" target="_blank" class="btn btn-outline-success btn-sm">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Date Countdown -->
+        <div class="card">
+            <div class="card-body">
+                <h6>Event Starts In:</h6>
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div class="h4 mb-0" id="days">0</div>
+                        <small>Days</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="h4 mb-0" id="hours">0</div>
+                        <small>Hours</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="h4 mb-0" id="minutes">0</div>
+                        <small>Mins</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="h4 mb-0" id="seconds">0</div>
+                        <small>Secs</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateCountdown() {
+    const eventDate = new Date("{{ event.start_date|date:'Y-m-d H:i:s' }}").getTime();
+    const now = new Date().getTime();
+    const distance = eventDate - now;
+    
+    if (distance < 0) {
+        document.getElementById('days').innerText = 0;
+        document.getElementById('hours').innerText = 0;
+        document.getElementById('minutes').innerText = 0;
+        document.getElementById('seconds').innerText = 0;
+        return;
+    }
+    
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+    document.getElementById('days').innerText = days;
+    document.getElementById('hours').innerText = hours;
+    document.getElementById('minutes').innerText = minutes;
+    document.getElementById('seconds').innerText = seconds;
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+
+<style>
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+}
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
